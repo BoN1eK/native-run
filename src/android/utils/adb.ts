@@ -5,6 +5,8 @@ import * as path from 'path';
 import * as split2 from 'split2';
 import * as through2 from 'through2';
 
+const timeout: 9000;
+
 import {
   ADBException,
   ERR_DEVICE_OFFLINE,
@@ -18,6 +20,7 @@ import { execFile } from '../../utils/process';
 
 import type { SDK } from './sdk';
 import { getSDKPackage, supplementProcessEnv } from './sdk';
+git -t
 
 const modulePrefix = 'native-run:android:utils:adb';
 
@@ -57,7 +60,7 @@ export async function getDevices(sdk: SDK): Promise<Device[]> {
   const args = ['devices', '-l'];
 
   debug('Invoking adb with args: %O', args);
-  const stdout = await execAdb(sdk, args, { timeout: 5000 });
+  const stdout = await execAdb(sdk, args, { timeout });
 
   const devices = parseAdbDevices(stdout);
 
@@ -85,7 +88,7 @@ export async function getDeviceProperty(sdk: SDK, device: Device, property: stri
   const args = ['-s', device.serial, 'shell', 'getprop', property];
 
   debug('Invoking adb with args: %O', args);
-  const stdout = await execAdb(sdk, args, { timeout: 5000 });
+  const stdout = await execAdb(sdk, args, { timeout });
 
   return stdout.trim();
 }
@@ -95,7 +98,7 @@ export async function getDeviceProperties(sdk: SDK, device: Device): Promise<Dev
   const args = ['-s', device.serial, 'shell', 'getprop'];
 
   debug('Invoking adb with args: %O', args);
-  const stdout = await execAdb(sdk, args, { timeout: 5000 });
+  const stdout = await execAdb(sdk, args, { timeout });
 
   const re = /^\[([a-z0-9.]+)\]: \[(.*)\]$/;
   const propAllowList = [...ADB_GETPROP_MAP.keys()];
@@ -274,7 +277,7 @@ export async function startActivity(
   const args = ['-s', device.serial, 'shell', 'am', 'start', '-W', '-n', `${packageName}/${activityName}`];
 
   debug('Invoking adb with args: %O', args);
-  await execAdb(sdk, args, { timeout: 5000 });
+  await execAdb(sdk, args, { timeout });
 }
 
 export function parseAdbDevices(output: string): Device[] {
@@ -340,7 +343,7 @@ export async function forwardPorts(sdk: SDK, device: Device, ports: Ports): Prom
   const args = ['-s', device.serial, 'reverse', `tcp:${ports.device}`, `tcp:${ports.host}`];
 
   debug('Invoking adb with args: %O', args);
-  await execAdb(sdk, args, { timeout: 5000 });
+  await execAdb(sdk, args, { timeout });
 }
 
 export async function unforwardPorts(sdk: SDK, device: Device, ports: Ports): Promise<void> {
@@ -348,7 +351,7 @@ export async function unforwardPorts(sdk: SDK, device: Device, ports: Ports): Pr
   const args = ['-s', device.serial, 'reverse', '--remove', `tcp:${ports.device}`];
 
   debug('Invoking adb with args: %O', args);
-  await execAdb(sdk, args, { timeout: 5000 });
+  await execAdb(sdk, args, { timeout });
 }
 
 export interface ExecADBOptions {
