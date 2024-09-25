@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as split2 from 'split2';
 import * as through2 from 'through2';
 
-const timeout: 9000;
+const ADB_COMMAND_TIMEOUT = 9000;
 
 import {
   ADBException,
@@ -20,7 +20,6 @@ import { execFile } from '../../utils/process';
 
 import type { SDK } from './sdk';
 import { getSDKPackage, supplementProcessEnv } from './sdk';
-git -t
 
 const modulePrefix = 'native-run:android:utils:adb';
 
@@ -60,7 +59,7 @@ export async function getDevices(sdk: SDK): Promise<Device[]> {
   const args = ['devices', '-l'];
 
   debug('Invoking adb with args: %O', args);
-  const stdout = await execAdb(sdk, args, { timeout });
+  const stdout = await execAdb(sdk, args, { ADB_COMMAND_TIMEOUT });
 
   const devices = parseAdbDevices(stdout);
 
@@ -88,7 +87,7 @@ export async function getDeviceProperty(sdk: SDK, device: Device, property: stri
   const args = ['-s', device.serial, 'shell', 'getprop', property];
 
   debug('Invoking adb with args: %O', args);
-  const stdout = await execAdb(sdk, args, { timeout });
+  const stdout = await execAdb(sdk, args, { ADB_COMMAND_TIMEOUT });
 
   return stdout.trim();
 }
@@ -98,7 +97,7 @@ export async function getDeviceProperties(sdk: SDK, device: Device): Promise<Dev
   const args = ['-s', device.serial, 'shell', 'getprop'];
 
   debug('Invoking adb with args: %O', args);
-  const stdout = await execAdb(sdk, args, { timeout });
+  const stdout = await execAdb(sdk, args, { ADB_COMMAND_TIMEOUT });
 
   const re = /^\[([a-z0-9.]+)\]: \[(.*)\]$/;
   const propAllowList = [...ADB_GETPROP_MAP.keys()];
@@ -277,7 +276,7 @@ export async function startActivity(
   const args = ['-s', device.serial, 'shell', 'am', 'start', '-W', '-n', `${packageName}/${activityName}`];
 
   debug('Invoking adb with args: %O', args);
-  await execAdb(sdk, args, { timeout });
+  await execAdb(sdk, args, { ADB_COMMAND_TIMEOUT });
 }
 
 export function parseAdbDevices(output: string): Device[] {
@@ -343,7 +342,7 @@ export async function forwardPorts(sdk: SDK, device: Device, ports: Ports): Prom
   const args = ['-s', device.serial, 'reverse', `tcp:${ports.device}`, `tcp:${ports.host}`];
 
   debug('Invoking adb with args: %O', args);
-  await execAdb(sdk, args, { timeout });
+  await execAdb(sdk, args, { ADB_COMMAND_TIMEOUT });
 }
 
 export async function unforwardPorts(sdk: SDK, device: Device, ports: Ports): Promise<void> {
@@ -351,11 +350,11 @@ export async function unforwardPorts(sdk: SDK, device: Device, ports: Ports): Pr
   const args = ['-s', device.serial, 'reverse', '--remove', `tcp:${ports.device}`];
 
   debug('Invoking adb with args: %O', args);
-  await execAdb(sdk, args, { timeout });
+  await execAdb(sdk, args, { ADB_COMMAND_TIMEOUT });
 }
 
 export interface ExecADBOptions {
-  timeout?: number;
+  ADB_COMMAND_TIMEOUT?: number;
 }
 
 export async function execAdb(sdk: SDK, args: string[], options: ExecADBOptions = {}): Promise<string> {
@@ -363,7 +362,7 @@ export async function execAdb(sdk: SDK, args: string[], options: ExecADBOptions 
   let timer: NodeJS.Timer | undefined;
 
   const retry = async () => {
-    const msg = `ADBs is unresponsive after ${options.timeout}ms, killing server and retrying...\n`;
+    const msg = `ADBs is unresponsive after ${options.ADB_COMMAND_TIMEOUT}ms, killing server and retrying...\n`;
     if (process.argv.includes('--json')) {
       debug(msg);
     } else {
